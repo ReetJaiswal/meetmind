@@ -4,6 +4,7 @@ import uuid
 from fastapi import APIRouter, UploadFile, File, HTTPException
 
 from app.services.transcription import TranscriptionService
+from app.services.ai import LLMService
 
 
 router = APIRouter(
@@ -12,15 +13,16 @@ router = APIRouter(
 )
 
 
-# Initialize the transcription service once.
-# Loading Whisper for every request would be extremely inefficient.
+# Initialize services once when the application starts.
 transcription_service = TranscriptionService()
+llm_service = LLMService()
 
 
 @router.post("/")
 async def transcribe_audio(file: UploadFile = File(...)):
     """
-    Upload an audio file and return its transcription.
+    Upload an audio file, transcribe it using Faster Whisper,
+    and analyze the transcript using Ollama.
     """
 
     allowed_extensions = {
@@ -41,7 +43,7 @@ async def transcribe_audio(file: UploadFile = File(...)):
             detail="Unsupported audio format."
         )
 
-    # Generate a unique filename to avoid collisions.
+    # Generate a unique filename.
     unique_filename = f"{uuid.uuid4()}{extension}"
 
     upload_directory = "uploads"
@@ -55,30 +57,51 @@ async def transcribe_audio(file: UploadFile = File(...)):
 
     try:
 
-        # Save uploaded audio
+        # ------------------------------------------------
+        # STEP 1: Save uploaded audio
+        # ------------------------------------------------
+
         with open(file_path, "wb") as buffer:
             content = await file.read()
             buffer.write(content)
 
-        # Transcribe audio
-        result = transcription_service.transcribe(
+        # ------------------------------------------------
+        # STEP 2: Transcribe audio using Faster Whisper
+        # ------------------------------------------------
+
+        transcription = transcription_service.transcribe(
             file_path
         )
 
+        # ------------------------------------------------
+        # STEP 3: Analyze transcript using Ollama
+        # ------------------------------------------------
+
+        analysis = await llm_service.analyze_meeting(
+            transcription["text"]
+        )
+
+        # ------------------------------------------------
+        # STEP 4: Return complete meeting intelligence
+        # ------------------------------------------------
+
         return {
             "filename": filename,
-            "transcription": result
+
+            "transcription": transcription,
+
+            "analysis": analysis
         }
 
     except Exception as error:
 
         raise HTTPException(
             status_code=500,
-            detail=f"Transcription failed: {str(error)}"
+            detail=f"Meeting processing failed: {str(error)}"
         )
 
     finally:
 
-        # Delete temporary audio file
+        # Delete temporary audio file.
         if os.path.exists(file_path):
             os.remove(file_path)

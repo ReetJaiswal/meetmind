@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 
 from app.routes.transcription import router as transcription_router
-
+from app.routes.analysis import router as analysis_router
 app = FastAPI(
     title="MeetMind API",
     description="AI-powered meeting intelligence platform",
@@ -24,3 +24,4 @@ def health():
 
 
 app.include_router(transcription_router)
+app.include_router(analysis_router)
