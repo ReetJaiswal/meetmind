@@ -24,55 +24,112 @@ function Sidebar({ currentPage, setCurrentPage }) {
     },
   ];
 
+  const isActive = (page) => {
+    if (page === "meetings") {
+      return (
+        currentPage === "meetings" ||
+        currentPage.startsWith("meeting-")
+      );
+    }
+
+    return currentPage === page;
+  };
+
   return (
     <aside className="sidebar">
-      
-      {/* Logo */}
+
+      {/* =====================================
+          BRAND
+      ====================================== */}
+
       <div className="sidebar-logo">
+
         <div className="logo-icon">
-          <Brain size={22} />
+          <Brain size={21} strokeWidth={2.3} />
         </div>
 
-        <div>
+        <div className="brand-text">
           <h2>MeetMind</h2>
           <span>Meeting Intelligence</span>
         </div>
+
       </div>
 
-      {/* Navigation */}
+
+      {/* =====================================
+          NAVIGATION
+      ====================================== */}
+
       <nav className="sidebar-nav">
 
         <p className="nav-title">
           WORKSPACE
         </p>
 
-        {menuItems.map((item) => {
-          const Icon = item.icon;
+        <div className="nav-items">
 
-          return (
-            <button
-              key={item.page}
-              className={`nav-item ${
-                currentPage === item.page
-                  ? "active"
-                  : ""
-              }`}
-              onClick={() =>
-                setCurrentPage(item.page)
-              }
-            >
-              <Icon size={19} />
-              <span>{item.name}</span>
-            </button>
-          );
-        })}
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            const active = isActive(item.page);
+
+            return (
+              <button
+                key={item.page}
+                type="button"
+                className={`nav-item ${
+                  active ? "active" : ""
+                }`}
+                onClick={() =>
+                  setCurrentPage(item.page)
+                }
+              >
+
+                <span className="nav-icon">
+                  <Icon
+                    size={18}
+                    strokeWidth={active ? 2.2 : 2}
+                  />
+                </span>
+
+                <span className="nav-label">
+                  {item.name}
+                </span>
+
+                {active && (
+                  <span className="nav-active-indicator" />
+                )}
+
+              </button>
+            );
+          })}
+
+        </div>
 
       </nav>
 
-      {/* Bottom */}
+
+      {/* =====================================
+          BOTTOM INFO
+      ====================================== */}
+
       <div className="sidebar-bottom">
-        <p>AI-powered meeting analysis</p>
-        <span>MeetMind v1.0</span>
+
+        <div className="sidebar-status">
+
+          <span className="status-dot" />
+
+          <span>AI Engine Ready</span>
+
+        </div>
+
+        <p>
+          AI-powered meeting analysis
+        </p>
+
+        <span className="version">
+          MeetMind · v1.0
+        </span>
+
       </div>
 
     </aside>
